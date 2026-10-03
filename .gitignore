@@ -1,0 +1,12 @@
+# Generated financial reports
+*_financial_report.xlsx
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Mac system files
+.DS_Store
+
+# VS Code settings
+.vscode/
