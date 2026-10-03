@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font
+from openpyxl.chart import LineChart, Reference
 
 def get_value(statement, row_name, year):
     if row_name in statement.index:
@@ -25,6 +26,44 @@ stock = yf.Ticker(ticker)
 
 income_statement = stock.financials
 balance_sheet = stock.balance_sheet
+
+print()
+print("AVAILABLE FINANCIAL YEARS")
+print("-------------------------")
+print(income_statement.columns)
+
+historical_data = []
+
+for year in income_statement.columns:
+    historical_revenue = income_statement.loc["Total Revenue", year]
+    historical_net_income = income_statement.loc["Net Income", year]
+
+    historical_data.append({
+        "Year": year.year,
+        "Revenue": historical_revenue,
+        "Net Income": historical_net_income
+    })
+
+    historical_df = pd.DataFrame(historical_data)
+
+    historical_df["Revenue Growth (%)"] = (
+    historical_df["Revenue"].pct_change(periods=-1) * 100
+).round(2)
+
+    historical_df["Net Margin (%)"] = (
+    historical_df["Net Income"] / historical_df["Revenue"] * 100
+).round(2)
+
+print()
+print("HISTORICAL PERFORMANCE")
+print("-------------------------")
+print(historical_df.to_string(index=False))
+
+print(
+        year.year,
+        format_money(historical_revenue),
+        format_money(historical_net_income)
+    )
 
 if income_statement.empty or balance_sheet.empty:
     print("Financial data could not be found for this ticker.")
@@ -133,10 +172,22 @@ print(report_df.to_string(index=False))
 
 file_name = ticker + "_financial_report.xlsx"
 
-report_df.to_excel(file_name, index=False)
+with pd.ExcelWriter(file_name, engine="openpyxl") as writer:
+    report_df.to_excel(
+        writer,
+        sheet_name="Financial Summary",
+        index=False
+    )
 
+    historical_df.to_excel(
+        writer,
+        sheet_name="Historical Performance",
+        index=False
+    )
 workbook = load_workbook(file_name)
-worksheet = workbook.active
+
+worksheet = workbook["Financial Summary"]
+historical_worksheet = workbook["Historical Performance"]
 
 for cell in worksheet[1]:
     cell.font = Font(bold=True)
@@ -153,6 +204,75 @@ for column in worksheet.columns:
 
 worksheet.freeze_panes = "A2"
 worksheet.auto_filter.ref = worksheet.dimensions
+
+for cell in historical_worksheet[1]:
+    cell.font = Font(bold=True)
+
+for column in historical_worksheet.columns:
+    max_length = 0
+    column_letter = column[0].column_letter
+
+    for cell in column:
+        if cell.value is not None:
+            max_length = max(max_length, len(str(cell.value)))
+
+    historical_worksheet.column_dimensions[column_letter].width = max_length + 2
+
+historical_worksheet.column_dimensions["B"].width = 22
+historical_worksheet.column_dimensions["C"].width = 22
+
+for row in historical_worksheet.iter_rows(min_row=2):
+    # Revenue
+    row[1].number_format = '$#,##0'
+
+    # Net Income
+    row[2].number_format = '$#,##0'
+
+    # Revenue Growth
+    if row[3].value is not None:
+        row[3].value = row[3].value / 100
+        row[3].number_format = '0.00%'
+
+    # Net Margin
+    if row[4].value is not None:
+        row[4].value = row[4].value / 100
+        row[4].number_format = '0.00%'
+
+historical_worksheet.freeze_panes = "A2"
+
+historical_worksheet.auto_filter.ref = historical_worksheet.dimensions
+
+# Create historical financial performance chart
+chart = LineChart()
+
+chart.title = "Revenue and Net Income"
+chart.y_axis.title = "Amount ($)"
+chart.x_axis.title = "Year"
+
+# Revenue and Net Income data
+data = Reference(
+    historical_worksheet,
+    min_col=2,
+    max_col=3,
+    min_row=1,
+    max_row=historical_worksheet.max_row
+)
+
+# Years for the horizontal axis
+years = Reference(
+    historical_worksheet,
+    min_col=1,
+    min_row=2,
+    max_row=historical_worksheet.max_row
+)
+
+chart.add_data(data, titles_from_data=True)
+chart.set_categories(years)
+
+chart.height = 8
+chart.width = 14
+
+historical_worksheet.add_chart(chart, "G2")
 
 workbook.save(file_name)
 
