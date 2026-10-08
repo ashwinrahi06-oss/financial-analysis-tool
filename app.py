@@ -13,6 +13,7 @@ import yfinance as yf
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.chart import LineChart, Reference
+from dcf_page import show_dcf_page
 
 from company_comparison import (
     get_company_overview,
@@ -970,6 +971,7 @@ with st.sidebar:
         [
             "Company Analysis",
             "Company Comparison",
+            "DCF Valuation",
             "About the Project",
         ],
     )
@@ -1001,6 +1003,10 @@ if page == "Company Analysis":
 elif page == "Company Comparison":
 
     company_comparison_page()
+
+elif page == "DCF Valuation":
+
+    show_dcf_page()
 
 else:
 
