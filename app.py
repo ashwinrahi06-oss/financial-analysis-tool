@@ -6,10 +6,12 @@
 
 import io
 import math
+import openpyxl
 import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+from case_studies.microsoft_valuation.equity_research_page import render as equity_research_page
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.chart import LineChart, Reference
@@ -24,6 +26,19 @@ from company_comparison import (
     PERCENT_METRICS,
     MULTIPLE_METRICS,
 )
+
+
+from pathlib import Path
+import sys
+
+MICROSOFT_DIR = (
+    Path(__file__).resolve().parent
+    / "case_studies"
+    / "microsoft_valuation"
+)
+
+
+
 
 
 # ============================================================
@@ -967,14 +982,14 @@ with st.sidebar:
     st.divider()
 
     page = st.radio(
-        "Navigation",
-        [
-            "Company Analysis",
-            "Company Comparison",
-            "DCF Valuation",
-            "About the Project",
-        ],
-    )
+    "Navigation",
+    [
+        "Company Analysis",
+        "Company Comparison",
+        "Microsoft Equity Research",
+        "About the Project",
+    ],
+)
 
     st.divider()
 
@@ -1004,41 +1019,72 @@ elif page == "Company Comparison":
 
     company_comparison_page()
 
-elif page == "DCF Valuation":
+elif page == "Microsoft Equity Research":
 
-    show_dcf_page()
+    equity_research_page()
 
-else:
+elif page == "About the Project":
 
     st.header("About the Project")
 
     st.write(
         """
-        This project combines financial modeling and
-        Python-based data analytics to help users
-        evaluate publicly traded companies.
+        The Financial Intelligence Dashboard is an
+        interactive financial analysis and equity
+        research platform built using Python.
 
-        **Core capabilities**
+        It combines automated financial statement
+        analysis, company comparisons, discounted
+        cash flow valuation, and investment research.
 
-        - Automated retrieval of annual financial statements
+        ### Core Capabilities
+
+        **1. Company Financial Analysis**
+        - Automated financial statement retrieval
         - Revenue growth and profitability analysis
         - Operating cash flow and free cash flow analysis
-        - Historical financial performance visualization
-        - Side-by-side company comparisons
+        - Historical financial performance charts
+        - Downloadable Excel financial reports
+
+        **2. Company Comparison**
+        - Side-by-side public company comparisons
+        - Financial performance benchmarking
+        - Profitability and growth comparisons
         - Data quality and reporting-period transparency
-        - Downloadable Excel reports
 
-        **Technologies**
+        **3. Microsoft Equity Research**
+        - Historical SEC financial statement analysis
+        - Five-year financial forecasts
+        - Discounted cash flow valuation
+        - Weighted average cost of capital analysis
+        - Bear, base, and bull scenarios
+        - Valuation sensitivity analysis
+        - AI infrastructure reinvestment analysis
+        - Downloadable valuation workbook
 
-        Python, Pandas, yfinance, Streamlit, and openpyxl.
+        ### Technologies
 
-        **Methodology note**
+        Python, Pandas, Streamlit, yfinance,
+        openpyxl, Plotly, and SEC Company Facts.
 
-        The dashboard uses publicly available financial
-        data and simplified financial calculations.
-        It is designed for educational financial analysis,
-        not as a substitute for audited filings or
-        professional investment research.
+        ### Project Objective
+
+        Demonstrate the application of financial
+        modeling, corporate valuation, data analytics,
+        and financial technology to real-world
+        investment research.
+
+        ### Methodology
+
+        Historical data is retrieved from financial
+        data providers and SEC filings.
+
+        Forecast assumptions are analyst estimates,
+        not company guidance.
+
+        The valuation models are intended for
+        educational research and are not investment
+        recommendations.
         """
     )
 
